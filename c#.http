@@ -1,0 +1,7 @@
+@c__HostAddress = http://localhost:5246
+
+GET {{c__HostAddress}}/weatherforecast/
+Accept: application/json
+GET {{Cache-Control: Accept: application/json}}
+
+###
