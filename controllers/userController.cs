@@ -18,6 +18,7 @@ using System.Net;
 using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 [ApiController]
 [Route("[controller]")]
 public class UserController : ControllerBase
@@ -46,11 +47,16 @@ public class UserController : ControllerBase
         }
             
     var user = await this._dbContext.CustomersUsers.FirstOrDefaultAsync(item => item.Email == userCred.Email);
-
-    if (user == null || !BCrypt.Net.BCrypt.Verify(userCred.Password, user.Password))
+      
+    if (user == null ||  !BCrypt.Net.BCrypt.Verify(userCred.Password, user.Password))
     {
     var responsee = new { errorMessage = "User not found or invalid credentials. Please register first." };
     return Unauthorized(responsee);
+     }
+     if(user.OtpVerification==null)
+     {
+       var responsee = new { errorMessage = "mobile number not verified. Please verify your phone and try again!." }; 
+       return Unauthorized(responsee); 
      }
 
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -153,10 +159,11 @@ public class UserController : ControllerBase
 
 
 
-
+CultureInfo culture = CultureInfo.InvariantCulture;
 
   [Route("api/register")]
   [HttpPost]
+  
  public async Task<IActionResult> Register([FromBody] SignupDetailsRequestModel request)
 {
     try
@@ -224,9 +231,10 @@ public class UserController : ControllerBase
           string cell = xmlDocument.Descendants("AuthenticateDocumentResult").Elements("Cell").First().Value;
         string civilStatus = xmlDocument.Descendants("AuthenticateDocumentResult").Elements("CivilStatus").First().Value;
         string countryOfBirth = xmlDocument.Descendants("AuthenticateDocumentResult").Elements("CountryOfBirth").First().Value;
-        DateTime dateOfBirth = DateTime.Parse(xmlDocument.Descendants("AuthenticateDocumentResult").Elements("DateOfBirth").First().Value);
+    //    DateTime dateOfBirth = DateTime.ParseExact(xmlDocument.Descendants("AuthenticateDocumentResult").Elements("DateOfBirth").First().Value, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
         string dateOfExpiry = xmlDocument.Descendants("AuthenticateDocumentResult").Elements("DateOfExpiry").FirstOrDefault()?.Value ?? "";
-        DateTime dateOfIssue = DateTime.Parse(xmlDocument.Descendants("AuthenticateDocumentResult").Elements("DateOfIssue").First().Value);
+    //    DateTime dateOfIssue = DateTime.ParseExact(xmlDocument.Descendants("AuthenticateDocumentResult").Elements("DateOfIssue").First().Value, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         string district = xmlDocument.Descendants("AuthenticateDocumentResult").Elements("District").First().Value;
         string documentNumber = xmlDocument.Descendants("AuthenticateDocumentResult").Elements("DocumentNumber").First().Value;
         int documentType = int.Parse(xmlDocument.Descendants("AuthenticateDocumentResult").Elements("DocumentType").First().Value);
@@ -266,20 +274,20 @@ public class UserController : ControllerBase
         }
 
 
+           DateTime formattedDate = DateTime.Now;
 
+DateTime parsedDate = DateTime.ParseExact(formattedDate.ToString("yyyy-MM-dd HH:mm:ss"), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
-        var newUser = new CustomersUser
-        {
-            Names = request.Name,
-            UserName = request.UserName,
-            Password = passwordHash,
-            Email = request.Email,
-            NationalId = request.NationalId,
-            Telephone = request.Telephone,
-            RecordedDate = DateTime.Now
-            
-            
-        };
+var newUser = new CustomersUser
+{
+    Names = request.Name,
+    UserName = request.UserName,
+    Password = passwordHash,
+    Email = request.Email,
+    NationalId = request.NationalId,
+    Telephone = request.Telephone,
+    RecordedDate = DateTime.Now,
+};
 
         _dbContext.CustomersUsers.Add(newUser);
         await _dbContext.SaveChangesAsync();
@@ -299,9 +307,9 @@ public class UserController : ControllerBase
             cell = cell,
             civilStatus = civilStatus,
             countryOfBirth = countryOfBirth,
-          dateOfBirth = dateOfBirth,
+        //   dateOfBirth = dateOfBirth,
          dateOfExpiry = dateOfExpiry,
-         dateOfIssue = dateOfIssue,
+        //  dateOfIssue = dateOfIssue,
         district = district,
         documentNumber = documentNumber,
        documentType = documentType,
@@ -333,7 +341,7 @@ public class UserController : ControllerBase
     }
 }
 
-private async Task<HttpResponseMessage> SendOtpRequest(object otpRequest)
+  private async Task<HttpResponseMessage> SendOtpRequest(object otpRequest)
 {
     using var httpClient = new HttpClient();
 
@@ -382,7 +390,7 @@ private async Task<HttpResponseMessage> SendNationalIdVerificationRequest(string
 
 
 
-[Route("api/verify-otp")]
+ [Route("api/verify-otp")]
 [HttpPost]
 public async Task<IActionResult> VerifyOTP([FromBody] OTPVerificationRequestModel request)
 {
@@ -424,9 +432,49 @@ public async Task<IActionResult> VerifyOTP([FromBody] OTPVerificationRequestMode
 }
 
 
+   
+ [HttpPost("resendOtp")]
+public async Task<IActionResult> ResendOtp(int id)
+{
+  var user = await _dbContext.CustomersUsers.FirstOrDefaultAsync(u =>u.IdRecord ==id);
+   DateTime expirationTimestamp = DateTime.Now.AddMinutes(3);
+  if(user==null) 
+    return NotFound();
+    
+  // Generate new OTP
+  string otp = ReGenerateOTP();
+  
+  // Update OTP and expiration in database
+  user.Otpcode = otp; 
+  user.OTPExpirationTimestamp = expirationTimestamp;
+
+  _dbContext.SaveChanges();
+
+  // Send OTP 
+  await ReSendOtpRequest(new {
+    PhoneNumber = user.Telephone,
+    Text = $"Your new OTP is {otp}"
+  });
+
+  return Ok("New OTP generated and sent");
+}
 
 
+private string ReGenerateOTP()
+{
+   Random random = new Random();
+   int otp = random.Next(100000, 999999);
+   return otp.ToString(); 
+}
 
+private async Task<HttpResponseMessage> ReSendOtpRequest(object otpRequest)
+{
+   using var httpClient = new HttpClient();
+
+    var content = new StringContent(JsonConvert.SerializeObject(otpRequest), Encoding.UTF8, "application/json");
+
+    return await httpClient.PostAsync("https://apps.prime.rw/onlineservicesapi/digitalservices/sendsmslife", content);
+}
 
 
 

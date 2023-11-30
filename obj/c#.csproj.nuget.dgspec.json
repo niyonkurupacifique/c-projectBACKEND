@@ -1,25 +1,27 @@
 {
   "format": 1,
   "restore": {
-    "D:\\desktop 2\\desktop 3\\Desktop\\c#\\c#.csproj": {}
+    "C:\\Users\\paccy\\Desktop\\c#\\c#.csproj": {}
   },
   "projects": {
-    "D:\\desktop 2\\desktop 3\\Desktop\\c#\\c#.csproj": {
+    "C:\\Users\\paccy\\Desktop\\c#\\c#.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\desktop 2\\desktop 3\\Desktop\\c#\\c#.csproj",
+        "projectUniqueName": "C:\\Users\\paccy\\Desktop\\c#\\c#.csproj",
         "projectName": "c#",
-        "projectPath": "D:\\desktop 2\\desktop 3\\Desktop\\c#\\c#.csproj",
-        "packagesPath": "C:\\Users\\PACCY\\.nuget\\packages\\",
-        "outputPath": "D:\\desktop 2\\desktop 3\\Desktop\\c#\\obj\\",
+        "projectPath": "C:\\Users\\paccy\\Desktop\\c#\\c#.csproj",
+        "packagesPath": "C:\\Users\\paccy\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\paccy\\Desktop\\c#\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\PACCY\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\paccy\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -96,7 +98,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100-rc.2.23502.2/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

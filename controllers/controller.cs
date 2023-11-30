@@ -31,6 +31,50 @@ namespace controll.Controllers
         }
     }
 
+   
+[Route("api/records")]
+[ApiController]
+public class RecordsController : ControllerBase
+{
+    private readonly PrimeInsuranceDbContext _dbContext;
+
+    public RecordsController(PrimeInsuranceDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetRecords()
+    {
+        try
+        {
+            var records = await _dbContext.PrimeInsuranceTables
+                .FromSqlRaw("SELECT * FROM primeInsuranceTable")
+                .ToListAsync();
+
+            if (records.Any())
+            {
+                // Convert records to the desired format
+                var response = new
+                {
+                    recordsets = new[] { records.Select(r => r.GetType().GetProperties().ToDictionary(p => p.Name, p => p.GetValue(r))).ToList() },
+                    recordset = records.Select(r => r.GetType().GetProperties().ToDictionary(p => p.Name, p => p.GetValue(r))).ToList()
+                };
+
+                return Ok(response);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions appropriately
+            return StatusCode(500, $"Internal Server Error: {ex.Message}");
+        }
+    }
+}
 
 
 
@@ -100,6 +144,81 @@ public class RatePerMilleController : ControllerBase
         }
     }
 }
+
+
+
+[Route("api/education")]
+[ApiController]
+public class EducationController : ControllerBase
+{
+    private readonly PrimeInsuranceDbContext _dbContext;
+
+    public EducationController(PrimeInsuranceDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetRatePerMille()
+    {
+        string age = HttpContext.Request.Query["age"];
+        string premiumFrequency = HttpContext.Request.Query["premiumFrequency"];
+        string benefitYears = HttpContext.Request.Query["benefitYears"];
+        string contributionYears = HttpContext.Request.Query["contributionYears"];
+        double Endowment_amount_after_differed_period = 0; // Assign an initial value
+
+        if (string.IsNullOrEmpty(age) || string.IsNullOrEmpty(premiumFrequency) || string.IsNullOrEmpty(benefitYears) || string.IsNullOrEmpty(contributionYears))
+        {
+            return BadRequest("Missing required query parameters");
+        }
+
+        int ageValue;
+        if (!int.TryParse(age, out ageValue))
+        {
+            return BadRequest("Invalid age value");
+        }
+
+        int benefitYearsValue;
+        if (!int.TryParse(benefitYears, out benefitYearsValue))
+        {
+            return BadRequest("Invalid benefit years value");
+        }
+
+        int contributionYearsValue;
+        if (!int.TryParse(contributionYears, out contributionYearsValue))
+        {
+            return BadRequest("Invalid contribution years value");
+        }
+
+        var ratePerMille = await _dbContext.EducatiionTables
+            .Where(
+                r => r.Age == ageValue
+                    && r.PremiumFrequency == premiumFrequency
+                    && r.BenefitYears == benefitYearsValue
+                    && r.ContributionYears == contributionYearsValue
+            )
+            .Select(r => r.RatePerMille)
+            .FirstOrDefaultAsync();
+
+        if (ratePerMille != null)
+        {
+            Endowment_amount_after_differed_period = 10000 * ratePerMille / 1000;
+            return Ok(new
+            {
+               
+                Endowment_amount_after_differed_period = Endowment_amount_after_differed_period,
+                Endowment_amount_during_differed_period = Endowment_amount_after_differed_period / 2
+            });
+        }
+        else
+        {
+            return NotFound("No data found for the specified criteria.");
+        }
+    }
+}
+
+
+
 
 
 

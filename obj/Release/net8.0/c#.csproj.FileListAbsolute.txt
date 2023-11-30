@@ -96,3 +96,4 @@ D:\desktop 2\desktop 3\Desktop\c#\bin\Release\net8.0\sv\Hangfire.Core.resources.
 D:\desktop 2\desktop 3\Desktop\c#\bin\Release\net8.0\tr-TR\Hangfire.Core.resources.dll
 D:\desktop 2\desktop 3\Desktop\c#\bin\Release\net8.0\zh-TW\Hangfire.Core.resources.dll
 D:\desktop 2\desktop 3\Desktop\c#\bin\Release\net8.0\zh\Hangfire.Core.resources.dll
+D:\desktop 2\desktop 3\Desktop\c#\obj\Release\net8.0\c#.sourcelink.json
